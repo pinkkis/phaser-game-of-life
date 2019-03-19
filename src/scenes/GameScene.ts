@@ -9,6 +9,8 @@ export class GameScene extends BaseScene{
 	private uiText: Phaser.GameObjects.Text;
 	private steppingPaused: boolean = false;
 
+	private renderTexture: Phaser.GameObjects.RenderTexture;
+
 	private cellRowWidth: number;
 	private cellColumnHeight: number;
 
@@ -21,7 +23,16 @@ export class GameScene extends BaseScene{
 	}
 
 	public init(): void {
-		// empty
+		const graphics = this.add.graphics();
+		graphics
+			.setVisible(false)
+			.fillStyle(0x00ff00, 1)
+			.fillRect(0, 0, gameOfLifeConfig.cellSize, gameOfLifeConfig.cellSize);
+
+		this.renderTexture = this.add.renderTexture(0, 0, gameOfLifeConfig.cellSize, gameOfLifeConfig.cellSize);
+		this.renderTexture.draw(graphics).saveTexture('block');
+
+		graphics.destroy();
 	}
 
 	public create(): void {
@@ -46,8 +57,9 @@ export class GameScene extends BaseScene{
 			for (let x = 0; x < gameWidth; x += cellSize) {
 				const color = new Phaser.Display.Color(0, Phaser.Math.Between(100, 255), 0, 1).color;
 
-				const cell = new Cell(this, x, y, cellSize, cellSize, color, 1);
+				const cell = new Cell(this, x, y, 'block');
 				cell.index = this.cells.length;
+				cell.setTint(new Phaser.Display.Color(0, Phaser.Math.Between(155, 255), 0, 1).color);
 				this.cells.push(cell);
 				this.add.existing(cell);
 			}
@@ -64,6 +76,21 @@ export class GameScene extends BaseScene{
 			this.step();
 			this.uiText.setText(`Step number: ${this.stepNumber}`);
 		}
+
+		if (this.input.activePointer.isDown) {
+			const cell = this.worldXyToCell(this.input.activePointer.worldX, this.input.activePointer.worldY);
+			if (cell) {
+				cell.setAlive(true);
+			}
+		}
+	}
+
+	// private methods ----------------------------------------
+	private worldXyToCell(x: number, y: number): Cell {
+		const gridX = Phaser.Math.Snap.To(x, gameOfLifeConfig.cellSize);
+		const gridY = Phaser.Math.Snap.To(y, gameOfLifeConfig.cellSize);
+		const idx = (gridY / gameOfLifeConfig.cellSize * this.cellRowWidth) + (gridX / gameOfLifeConfig.cellSize);
+		return idx >= 0 && idx < this.cells.length ? this.cells[idx] : null;
 	}
 
 	private step(): void {
@@ -71,7 +98,7 @@ export class GameScene extends BaseScene{
 			this.calculateCellState(cell);
 		});
 
-		const cellsToUpdate = this.cells.filter( (cell: Cell) => cell.needsUpdate);
+		const cellsToUpdate = this.cells.filter( (cell: Cell) => cell.willChange);
 		cellsToUpdate.forEach( (cell: Cell) => cell.postStep());
 
 		if (cellsToUpdate.length < this.cells.length / 33) {
@@ -82,7 +109,7 @@ export class GameScene extends BaseScene{
 	private seedCells() {
 		this.cells.forEach( (cell: Cell) => {
 			if (Phaser.Math.Between(1, 10) === 1) {
-				cell.alive = true;
+				cell.setAlive(true);
 			}
 		});
 	}
@@ -136,10 +163,10 @@ export class GameScene extends BaseScene{
 
 	private wrapCell(cellIndex: number): number {
 		if (cellIndex > this.cells.length - 1) {
-			cellIndex = gameOfLifeConfig.screenWrap ? cellIndex - this.cells.length : null;
+			return gameOfLifeConfig.screenWrap ? cellIndex - this.cells.length : null;
 		}
 		if (cellIndex < 0) {
-			cellIndex = gameOfLifeConfig.screenWrap ? cellIndex + this.cells.length : null;
+			return gameOfLifeConfig.screenWrap ? cellIndex + this.cells.length : null;
 		}
 
 		return cellIndex;
