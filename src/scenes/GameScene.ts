@@ -81,7 +81,7 @@ export class GameScene extends BaseScene{
 
 	private seedCells() {
 		this.cells.forEach( (cell: Cell) => {
-			if (Phaser.Math.Between(1, 10) > 8) {
+			if (Phaser.Math.Between(1, 10) === 1) {
 				cell.alive = true;
 			}
 		});
