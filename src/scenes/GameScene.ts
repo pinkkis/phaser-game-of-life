@@ -79,7 +79,7 @@ export class GameScene extends BaseScene{
 		});
 
 		this.scale.on(Phaser.Scale.Events.ENTER_FULLSCREEN, () => {
-			this.scale.lockOrientation('landscape-primary');
+			screen.orientation.lock('landscape-primary');
 		});
 	}
 
