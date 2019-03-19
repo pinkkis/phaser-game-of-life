@@ -1,14 +1,13 @@
 const path = require('path');
 const webpack = require('webpack');
 const HtmlWebPackPlugin = require('html-webpack-plugin');
-const CopyWebpackPlugin = require('copy-webpack-plugin');
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
 const devMode = process.env.NODE_ENV !== 'production';
 
 // Phaser webpack config
 const phaserModule = path.join(__dirname, '/node_modules/phaser/');
-const phaser = path.join(phaserModule, 'dist/phaser.js');
+const phaser = path.join(phaserModule, 'dist/phaser.min.js');
 
 module.exports = {
 	output: {
@@ -16,6 +15,9 @@ module.exports = {
 	},
 	entry: {
 		game: ['./src/game.ts']
+	},
+	output: {
+		path: path.resolve(__dirname, './docs')
 	},
 	module: {
 		rules: [{
@@ -79,24 +81,6 @@ module.exports = {
 			filename: './index.html',
 			chunks: ['game', 'vendor']
 		}),
-		// new CopyWebpackPlugin([
-		// 	{
-		// 		from: './assets/atlas/',
-		// 		to: './assets/atlas/'
-		// 	},
-		// 	{
-		// 		from: './assets/tilemaps/',
-		// 		to: './assets/tilemaps/'
-		// 	},
-		// 	{
-		// 		from: './assets/tilesets/',
-		// 		to: './assets/tilesets/'
-		// 	},
-		// 	{
-		// 		from: './assets/json/',
-		// 		to: './assets/json/'
-		// 	}
-		// ], {}),
 		new MiniCssExtractPlugin({
 			filename: devMode ? '[name].css' : '[name].[hash].css',
 			chunkFilename: devMode ? '[id].css' : '[id].[hash].css',
